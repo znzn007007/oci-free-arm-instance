@@ -55,6 +55,54 @@ jobs:
           MAX_ATTEMPTS=3
           OCI_OUTPUT=""
 
+          run_preflight_diagnostics() {
+            echo "OCI CLI version:"
+            oci --version 2>&1 || true
+            echo
+
+            echo "Required configuration presence:"
+            for var_name in \
+              COMPARTMENT_ID \
+              IMAGE_ID \
+              SUBNET_ID \
+              AD_NAME \
+              OCI_CLI_REGION \
+              OCI_CLI_USER \
+              OCI_CLI_TENANCY \
+              OCI_CLI_FINGERPRINT \
+              OCI_CLI_KEY_CONTENT; do
+              if [ -n "${!var_name:-}" ]; then
+                echo "${var_name}=set"
+              else
+                echo "${var_name}=missing"
+              fi
+            done
+            echo
+
+            if [ -n "${OCI_CLI_REGION:-}" ]; then
+              OCI_IAAS_ENDPOINT="https://iaas.${OCI_CLI_REGION}.oraclecloud.com"
+              echo "Testing OCI IaaS endpoint connectivity: ${OCI_IAAS_ENDPOINT}"
+              curl -v --connect-timeout 20 --max-time 30 "${OCI_IAAS_ENDPOINT}" 2>&1 || true
+            else
+              echo "Skipping OCI IaaS endpoint connectivity check because OCI_CLI_REGION is missing."
+            fi
+            echo
+
+            echo "Validating OCI CLI config:"
+            oci setup config validate 2>&1 || true
+            echo
+
+            echo "Testing OCI API auth and region subscription lookup:"
+            oci iam region-subscription list --all 2>&1 || true
+          }
+
+          echo "Running OCI preflight diagnostics..."
+          PREFLIGHT_OUTPUT="$(run_preflight_diagnostics)"
+          printf '%s\n' "$PREFLIGHT_OUTPUT"
+          OCI_OUTPUT="$(printf '%s\n--- OCI preflight diagnostics ---\n%s' \
+            "$OCI_OUTPUT" \
+            "$PREFLIGHT_OUTPUT")"
+
           for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
             echo "OCI launch attempt ${attempt}/${MAX_ATTEMPTS}..."
 
