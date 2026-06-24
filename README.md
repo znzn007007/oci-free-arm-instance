@@ -19,7 +19,7 @@ The workflow keeps retrying on a schedule and sends Feishu/Lark notifications on
 * Can also be started manually from the GitHub Actions page.
 * Uses repository secrets for OCI credentials, region, image, subnet, availability domain, SSH key, and Feishu webhook.
 * Tries to create one `VM.Standard.A1.Flex` instance.
-* Default instance settings are `4 OCPU`, `24 GB RAM`, `200 GB boot volume`, and display name `coolify-vm`.
+* Default instance settings are `2 OCPU`, `12 GB RAM`, `200 GB boot volume`, and display name `coolify-vm`.
 * Does not send Feishu messages for expected `Out of host capacity` retries.
 * Sends Feishu messages for successful provisioning and non-capacity errors.
 * Supports Feishu/Lark custom bot signature verification through `FEISHU_WEBHOOK_SECRET`.
@@ -214,7 +214,7 @@ This is normal. The workflow uses GitHub-hosted `ubuntu-latest`, so you do not n
 The VM size is currently hardcoded in `.github/workflows/create-vm.yml`:
 
 ```yaml
---shape-config '{"ocpus":4,"memoryInGBs":24}' \
+--shape-config '{"ocpus":2,"memoryInGBs":12}' \
 --display-name "coolify-vm" \
 --boot-volume-size-in-gbs 200
 ```
